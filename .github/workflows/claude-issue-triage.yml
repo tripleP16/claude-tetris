@@ -1,0 +1,61 @@
+name: Claude Issue Triage
+
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  triage:
+    # Only run for issues (the `issues` event is issue-only, this is just an explicit safeguard)
+    if: github.event.issue.pull_request == null
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Run Claude Issue Triage
+        id: claude-triage
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+
+          # Allow Claude to inspect the repo and manage labels/comments on this issue.
+          # No `gh label create`: only existing repo labels may be applied.
+          allowed_tools: |
+            Bash(gh issue view *)
+            Bash(gh issue edit *)
+            Bash(gh issue comment *)
+            Bash(gh label list *)
+            Bash(gh api *)
+            Read
+            Grep
+            Glob
+
+          prompt: |
+            You are triaging GitHub issue #${{ github.event.issue.number }} in ${{ github.repository }}.
+
+            Steps:
+            1. Read the issue with `gh issue view ${{ github.event.issue.number }} --json title,body,number`.
+            2. Explore the repository source relevant to the issue (this is a vanilla JS Tetris game — see CLAUDE.md for a map of game.js: collide, rotateCW, tryRotate, merge, clearLines, ghostY, hardDrop, softDrop, lockPiece, spawn, loop, and the key constants COLS/ROWS/BLOCK/COLORS/PIECES/LINE_SCORES) to understand the actual behavior involved.
+            3. List existing labels with `gh label list`. Apply only labels that already exist and clearly fit (e.g. bug, enhancement, documentation, question). Do NOT create new labels. Do not over-label. Apply with `gh issue edit ${{ github.event.issue.number }} --add-label "..."`.
+            4. Check whether a previous diagnosis comment from you already exists on this issue: run `gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments --jq '.[] | select(.body | contains("<!-- claude-issue-diagnosis -->")) | .id'`.
+               - If an id is found, UPDATE that existing comment in place with `gh api repos/${{ github.repository }}/issues/comments/<id> -X PATCH -f body=<new body>` (do not create a new comment).
+               - If no id is found, create a new comment with `gh issue comment ${{ github.event.issue.number }} --body-file -` (or `--body`), piping in the body.
+               - Either way, the comment body must start with the exact marker line `<!-- claude-issue-diagnosis -->` on its own line, followed by the diagnosis in markdown, so future runs can find and update it.
+            5. Structure the diagnosis with these sections:
+               - **Summary**: one or two sentence restatement of the issue.
+               - **Root cause analysis**: your best understanding of why this happens or what's missing, citing specific functions/files from game.js, index.html, or style.css.
+               - **Affected code**: concrete file/function references.
+               - **Suggested approach**: a concrete, actionable plan to implement the fix or feature, including relevant edge cases (e.g. wall kicks, board edges, level scaling).
+               - **Testing notes**: what manual checks should be done, given this repo has no automated tests (see CLAUDE.md's Testing section).
+
+            Be concrete and specific rather than generic — reference actual code you found in the repository. If the issue lacks enough information to diagnose confidently, say so explicitly in the Summary and ask a clarifying question at the end of the comment instead of guessing, but still apply your best-guess labels.
+
+          # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
+          # or https://code.claude.com/docs/en/cli-reference for available options
