@@ -57,5 +57,7 @@ jobs:
 
             Be concrete and specific rather than generic — reference actual code you found in the repository. If the issue lacks enough information to diagnose confidently, say so explicitly in the Summary and ask a clarifying question at the end of the comment instead of guessing, but still apply your best-guess labels.
 
+            The comment must contain the FULL diagnosis, not an abbreviated summary: fill in every section from step 5 with complete detail (actual function/line references, exact reasoning, all relevant edge cases and testing steps). Do not truncate or defer detail to "see code" — the comment itself must be the reference someone can act on without re-doing your investigation.
+
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
           # or https://code.claude.com/docs/en/cli-reference for available options
