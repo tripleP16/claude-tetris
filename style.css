@@ -126,6 +126,21 @@ body {
   letter-spacing: 1px;
 }
 
+.powerup-queue {
+  font-size: 22px;
+  letter-spacing: 4px;
+}
+
+.powerup-freeze {
+  font-size: 11px;
+  color: var(--value-color);
+  font-weight: 600;
+}
+
+.powerup-freeze.hidden {
+  display: none;
+}
+
 #next-canvas {
   display: block;
   border: 1px solid var(--board-border);
