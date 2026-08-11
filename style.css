@@ -131,6 +131,23 @@ body {
   letter-spacing: 4px;
 }
 
+.combo-value {
+  transition: color 0.15s ease;
+}
+
+.combo-value.active {
+  color: var(--overlay-title);
+}
+
+.best-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+  color: var(--control-text);
+  font-family: 'Courier New', Courier, monospace;
+}
+
 .powerup-freeze {
   font-size: 11px;
   color: var(--value-color);
