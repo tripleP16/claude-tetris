@@ -228,3 +228,88 @@ kbd {
 #restart-btn:hover {
   background: var(--btn-hover);
 }
+
+/* ---- Menú de pausa ---- */
+#pause-menu.hidden {
+  display: none;
+}
+
+.pause-box {
+  width: 200px;
+}
+
+#pause-title {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 4px;
+  color: var(--overlay-title);
+}
+
+.pause-view {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: stretch;
+  width: 100%;
+}
+
+.pause-view.hidden {
+  display: none;
+}
+
+.menu-btn {
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  border: none;
+  border-radius: 6px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: background 0.15s;
+}
+
+.menu-btn:hover {
+  background: var(--btn-hover);
+}
+
+.pause-level-select {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+
+.pause-level-select label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--label-color);
+  font-weight: 600;
+}
+
+.pause-level-select select {
+  background: var(--kbd-bg);
+  border: 1px solid var(--kbd-border);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+#pause-controls-view ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+#pause-controls-view li {
+  font-size: 12px;
+  color: var(--control-text);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
