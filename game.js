@@ -56,8 +56,12 @@ const themeToggleBtn = document.getElementById('theme-toggle');
 const powerupQueueEl = document.getElementById('powerup-queue');
 const powerupFreezeEl = document.getElementById('powerup-freeze');
 const powerupFreezeTimeEl = document.getElementById('powerup-freeze-time');
+const startScreen = document.getElementById('start-screen');
+const startHighscoresEl = document.getElementById('start-highscores-table');
+const playBtn = document.getElementById('play-btn');
 
 const THEME_KEY = 'tetris-theme';
+const HIGHSCORES_KEY = 'tetris-highscores';
 let gridLineColor = '#22222e';
 
 function getPreferredTheme() {
@@ -88,6 +92,59 @@ themeToggleBtn.addEventListener('click', () => {
 window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', e => {
   if (!localStorage.getItem(THEME_KEY)) applyTheme(e.matches ? 'light' : 'dark');
 });
+
+function getHighscores() {
+  try {
+    const raw = localStorage.getItem(HIGHSCORES_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter(entry => entry && typeof entry === 'object' && typeof entry.score === 'number')
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5);
+  } catch (err) {
+    return [];
+  }
+}
+
+function renderHighscores(container) {
+  const entries = getHighscores();
+  container.innerHTML = '';
+  if (!entries.length) {
+    const empty = document.createElement('div');
+    empty.className = 'highscore-empty';
+    empty.textContent = 'Sin records';
+    container.appendChild(empty);
+    return;
+  }
+  entries.forEach((entry, i) => {
+    const row = document.createElement('div');
+    row.className = 'highscore-row';
+    const rank = document.createElement('span');
+    rank.className = 'highscore-rank';
+    rank.textContent = `${i + 1}.`;
+    const name = document.createElement('span');
+    name.className = 'highscore-name';
+    name.textContent = entry.name ? String(entry.name) : '---';
+    const scoreVal = document.createElement('span');
+    scoreVal.className = 'highscore-score';
+    scoreVal.textContent = Number(entry.score).toLocaleString();
+    row.appendChild(rank);
+    row.appendChild(name);
+    row.appendChild(scoreVal);
+    container.appendChild(row);
+  });
+}
+
+function showStartScreen() {
+  renderHighscores(startHighscoresEl);
+  startScreen.classList.remove('hidden');
+}
+
+function hideStartScreen() {
+  startScreen.classList.add('hidden');
+}
 
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
 let powerupQueue, linesSincePowerup, powerupThreshold, freezeUntil;
@@ -400,6 +457,7 @@ function endGame() {
 }
 
 function togglePause() {
+  if (!startScreen.classList.contains('hidden')) return;
   if (gameOver) return;
   paused = !paused;
   if (!paused) {
@@ -456,6 +514,7 @@ function init() {
 }
 
 document.addEventListener('keydown', e => {
+  if (!startScreen.classList.contains('hidden')) return;
   if (e.code === 'KeyP') { togglePause(); return; }
   if (paused || gameOver) return;
   switch (e.code) {
@@ -485,4 +544,9 @@ document.addEventListener('keydown', e => {
 
 restartBtn.addEventListener('click', init);
 
-init();
+playBtn.addEventListener('click', () => {
+  hideStartScreen();
+  init();
+});
+
+showStartScreen();
