@@ -4,17 +4,61 @@ const COLS = 10;
 const ROWS = 20;
 const BLOCK = 30;
 
-const COLORS = [
-  null,
-  '#4dd0e1', // I - cyan
-  '#ffd54f', // O - yellow
-  '#ba68c8', // T - purple
-  '#81c784', // S - green
-  '#e57373', // Z - red
-  '#64b5f6', // J - light blue
-  '#ffb74d', // L - orange
-  '#ffd700', // 8 - wildcard (Tint power-up)
-];
+// Skin registry: each skin supplies a full palette (indices 1-7 are the seven
+// tetromino piece colors, index 8 is the wildcard color used by the Tint
+// power-up) plus enough rendering info for drawBlock() to render it distinctly.
+const SKINS = {
+  retro: {
+    label: 'Retro',
+    icon: '🟦',
+    palette: [
+      null,
+      '#4dd0e1', // I - cyan
+      '#ffd54f', // O - yellow
+      '#ba68c8', // T - purple
+      '#81c784', // S - green
+      '#e57373', // Z - red
+      '#64b5f6', // J - light blue
+      '#ffb74d', // L - orange
+      '#ffd700', // 8 - wildcard (Tint power-up)
+    ],
+    highlight: 'rgba(255,255,255,0.12)',
+  },
+  neon: {
+    label: 'Neon',
+    icon: '💠',
+    palette: [
+      null,
+      '#00e5ff', '#fff700', '#e040fb', '#00e676',
+      '#ff1744', '#2979ff', '#ff9100', '#ffea00',
+    ],
+    highlight: 'rgba(255,255,255,0.35)',
+    glow: true,
+  },
+  pastel: {
+    label: 'Pastel',
+    icon: '🌸',
+    palette: [
+      null,
+      '#a8dadc', '#ffe8a1', '#d8bbff', '#b5e8b0',
+      '#ffb3ba', '#a9c9ff', '#ffd8a8', '#fff2b2',
+    ],
+    highlight: 'rgba(255,255,255,0.4)',
+    rounded: true,
+  },
+  pixel: {
+    label: 'Pixel art',
+    icon: '🕹️',
+    palette: [
+      null,
+      '#4dd0e1', '#ffd54f', '#ba68c8', '#81c784',
+      '#e57373', '#64b5f6', '#ffb74d', '#ffd700',
+    ],
+    highlight: 'rgba(255,255,255,0.12)',
+    texture: true,
+  },
+};
+const DEFAULT_SKIN = 'retro';
 
 const POWERUPS = {
   bomb: { icon: '💣' },
@@ -53,6 +97,8 @@ const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
 const themeToggleBtn = document.getElementById('theme-toggle');
+const skinPickerEl = document.getElementById('skin-picker');
+const skinButtons = skinPickerEl ? Array.from(skinPickerEl.querySelectorAll('.skin-btn')) : [];
 const powerupQueueEl = document.getElementById('powerup-queue');
 const powerupFreezeEl = document.getElementById('powerup-freeze');
 const powerupFreezeTimeEl = document.getElementById('powerup-freeze-time');
@@ -87,6 +133,37 @@ themeToggleBtn.addEventListener('click', () => {
 
 window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', e => {
   if (!localStorage.getItem(THEME_KEY)) applyTheme(e.matches ? 'light' : 'dark');
+});
+
+const SKIN_KEY = 'tetris-skin';
+let currentSkin = DEFAULT_SKIN;
+
+function getPreferredSkin() {
+  const stored = localStorage.getItem(SKIN_KEY);
+  return SKINS[stored] ? stored : DEFAULT_SKIN;
+}
+
+function applySkin(skin) {
+  currentSkin = SKINS[skin] ? skin : DEFAULT_SKIN;
+  document.documentElement.setAttribute('data-skin', currentSkin);
+  // Grid line color is theme-driven CSS; re-read it in case skin CSS overrides it too.
+  gridLineColor = getComputedStyle(document.documentElement).getPropertyValue('--grid-line').trim();
+  skinButtons.forEach(btn => {
+    const active = btn.dataset.skin === currentSkin;
+    btn.classList.toggle('active', active);
+    btn.setAttribute('aria-pressed', String(active));
+  });
+}
+
+function setSkin(skin) {
+  localStorage.setItem(SKIN_KEY, skin);
+  applySkin(skin);
+}
+
+applySkin(getPreferredSkin());
+
+skinButtons.forEach(btn => {
+  btn.addEventListener('click', () => setSkin(btn.dataset.skin));
 });
 
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
@@ -305,16 +382,64 @@ function updateHUD() {
   if (freezeRemaining > 0) powerupFreezeTimeEl.textContent = (freezeRemaining / 1000).toFixed(1);
 }
 
+function drawPixelTexture(context, px, py, s) {
+  const cell = Math.max(3, Math.floor(s / 5));
+  context.fillStyle = 'rgba(0,0,0,0.18)';
+  for (let ty = 0; ty * cell < s; ty++) {
+    for (let tx = 0; tx * cell < s; tx++) {
+      if ((tx + ty) % 2 === 0) continue;
+      const w = Math.min(cell, s - tx * cell);
+      const h = Math.min(cell, s - ty * cell);
+      context.fillRect(px + tx * cell, py + ty * cell, w, h);
+    }
+  }
+}
+
 function drawBlock(context, x, y, colorIndex, size, alpha) {
   if (!colorIndex) return;
-  const color = COLORS[colorIndex];
+  const skin = SKINS[currentSkin] || SKINS[DEFAULT_SKIN];
+  const color = skin.palette[colorIndex] || SKINS[DEFAULT_SKIN].palette[colorIndex];
+  const px = x * size + 1;
+  const py = y * size + 1;
+  const s = size - 2;
+
+  context.save();
   context.globalAlpha = alpha ?? 1;
+
+  if (skin.glow) {
+    context.shadowBlur = size * 0.5;
+    context.shadowColor = color;
+  }
+
   context.fillStyle = color;
-  context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
+  if (skin.rounded) {
+    const r = Math.min(6, s / 4);
+    context.beginPath();
+    if (context.roundRect) context.roundRect(px, py, s, s, r);
+    else context.rect(px, py, s, s);
+    context.fill();
+  } else {
+    context.fillRect(px, py, s, s);
+  }
+
+  // Texture/highlight overlays should not inherit the glow blur.
+  context.shadowBlur = 0;
+
+  if (skin.texture) drawPixelTexture(context, px, py, s);
+
   // highlight
-  context.fillStyle = 'rgba(255,255,255,0.12)';
-  context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
-  context.globalAlpha = 1;
+  context.fillStyle = skin.highlight;
+  if (skin.rounded) {
+    const r = Math.min(6, s / 4);
+    context.beginPath();
+    if (context.roundRect) context.roundRect(px, py, s, 4, [r, r, 0, 0]);
+    else context.rect(px, py, s, 4);
+    context.fill();
+  } else {
+    context.fillRect(px, py, s, 4);
+  }
+
+  context.restore();
 }
 
 function drawGrid() {

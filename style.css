@@ -96,6 +96,63 @@ body {
   border-color: var(--value-color);
 }
 
+.skin-picker {
+  position: fixed;
+  top: 16px;
+  right: 62px;
+  display: flex;
+  gap: 6px;
+}
+
+.skin-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--board-border);
+  background: var(--board-bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.55;
+  transition: background 0.15s, border-color 0.15s, opacity 0.15s, transform 0.15s;
+}
+
+.skin-btn:hover {
+  border-color: var(--value-color);
+  opacity: 0.85;
+}
+
+.skin-btn.active {
+  opacity: 1;
+  border-color: var(--value-color);
+  box-shadow: 0 0 0 2px var(--value-color) inset;
+  transform: scale(1.06);
+}
+
+/* ---- Skins ---- */
+[data-skin='neon'] #board,
+[data-skin='neon'] #next-canvas {
+  background: #050507;
+  border-color: #00e5ff;
+  box-shadow: 0 0 18px rgba(0, 229, 255, 0.55), 0 0 42px rgba(0, 229, 255, 0.25);
+}
+
+[data-skin='pastel'] #board,
+[data-skin='pastel'] #next-canvas {
+  border-radius: 18px;
+  border-color: #d8bbff;
+  box-shadow: 0 0 24px rgba(216, 187, 255, 0.35);
+}
+
+[data-skin='pixel'] #board,
+[data-skin='pixel'] #next-canvas {
+  image-rendering: pixelated;
+}
+
 /* ---- Panel lateral ---- */
 .panel {
   width: 160px;
