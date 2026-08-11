@@ -186,8 +186,8 @@ kbd {
   border-radius: 4px;
 }
 
-.overlay.hidden {
-  display: none;
+.hidden {
+  display: none !important;
 }
 
 .overlay-box {
@@ -227,4 +227,114 @@ kbd {
 
 #restart-btn:hover {
   background: var(--btn-hover);
+}
+
+/* ---- Records / Highscores ---- */
+.highscore-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
+.highscore-entry-label {
+  font-size: 12px;
+  color: var(--overlay-score);
+  font-weight: 600;
+}
+
+.highscore-entry-row {
+  display: flex;
+  gap: 8px;
+}
+
+#highscore-name-input {
+  font-family: inherit;
+  font-size: 13px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--board-border);
+  background: var(--board-bg);
+  color: var(--text);
+  width: 120px;
+}
+
+#highscore-name-input:focus {
+  outline: none;
+  border-color: var(--value-color);
+}
+
+#highscore-save-btn {
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+#highscore-save-btn:hover {
+  background: var(--btn-hover);
+}
+
+.highscores-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+}
+
+.highscores-table {
+  border-collapse: collapse;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
+  min-width: 200px;
+}
+
+.highscores-table td {
+  padding: 3px 8px;
+  color: var(--text);
+  text-align: left;
+}
+
+.highscores-table td:first-child {
+  color: var(--label-color);
+  text-align: right;
+  width: 1.5em;
+}
+
+.highscores-table td:last-child {
+  text-align: right;
+  color: var(--value-color);
+  font-weight: 700;
+}
+
+.highscores-table tr.highscore-new td {
+  color: var(--overlay-title);
+}
+
+.highscore-stats {
+  font-size: 11px;
+  color: var(--control-text);
+  letter-spacing: 0.5px;
+}
+
+.secondary-btn {
+  background: transparent;
+  color: var(--control-text);
+  border: 1px solid var(--board-border);
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.secondary-btn:hover {
+  border-color: var(--overlay-title);
+  color: var(--overlay-title);
 }
