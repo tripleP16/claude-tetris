@@ -56,6 +56,26 @@ const themeToggleBtn = document.getElementById('theme-toggle');
 const powerupQueueEl = document.getElementById('powerup-queue');
 const powerupFreezeEl = document.getElementById('powerup-freeze');
 const powerupFreezeTimeEl = document.getElementById('powerup-freeze-time');
+const comboEl = document.getElementById('combo');
+const bestComboEl = document.getElementById('best-combo');
+const bestLinesEl = document.getElementById('best-lines');
+
+const STATS_KEY = 'tetris-stats';
+
+function loadStats() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(STATS_KEY));
+    if (stored && typeof stored === 'object') {
+      return {
+        bestCombo: Number(stored.bestCombo) || 0,
+        bestLines: Number(stored.bestLines) || 0,
+      };
+    }
+  } catch (e) {
+    // ignore malformed data
+  }
+  return { bestCombo: 0, bestLines: 0 };
+}
 
 const THEME_KEY = 'tetris-theme';
 let gridLineColor = '#22222e';
@@ -91,6 +111,7 @@ window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', e 
 
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
 let powerupQueue, linesSincePowerup, powerupThreshold, freezeUntil;
+let combo, maxCombo, maxLinesInClear, bestStats;
 
 function randomPowerupThreshold() {
   return 1 + Math.floor(Math.random() * 2); // 1-2 lines
@@ -170,6 +191,7 @@ function clearLines() {
     }
     updateHUD();
   }
+  return cleared;
 }
 
 function grantPowerup() {
@@ -280,7 +302,15 @@ function softDrop() {
 
 function lockPiece() {
   merge();
-  clearLines();
+  const cleared = clearLines();
+  if (cleared > 0) {
+    combo++;
+    maxCombo = Math.max(maxCombo, combo);
+    maxLinesInClear = Math.max(maxLinesInClear, cleared);
+  } else {
+    combo = 0;
+  }
+  updateHUD();
   spawn();
 }
 
@@ -303,6 +333,10 @@ function updateHUD() {
   const freezeRemaining = Math.max(0, freezeUntil - performance.now());
   powerupFreezeEl.classList.toggle('hidden', freezeRemaining <= 0);
   if (freezeRemaining > 0) powerupFreezeTimeEl.textContent = (freezeRemaining / 1000).toFixed(1);
+  comboEl.textContent = combo > 1 ? `x${combo}` : '—';
+  comboEl.classList.toggle('active', combo > 1);
+  bestComboEl.textContent = `Combo: ${bestStats.bestCombo}`;
+  bestLinesEl.textContent = `Líneas: ${bestStats.bestLines}`;
 }
 
 function drawBlock(context, x, y, colorIndex, size, alpha) {
@@ -397,6 +431,13 @@ function endGame() {
   overlayTitle.textContent = 'GAME OVER';
   overlayScore.textContent = `Puntuación: ${score.toLocaleString()}`;
   overlay.classList.remove('hidden');
+
+  const stats = loadStats();
+  stats.bestCombo = Math.max(stats.bestCombo, maxCombo);
+  stats.bestLines = Math.max(stats.bestLines, maxLinesInClear);
+  localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+  bestStats = stats;
+  updateHUD();
 }
 
 function togglePause() {
@@ -447,6 +488,10 @@ function init() {
   linesSincePowerup = 0;
   powerupThreshold = randomPowerupThreshold();
   freezeUntil = 0;
+  combo = 0;
+  maxCombo = 0;
+  maxLinesInClear = 0;
+  bestStats = loadStats();
   next = randomPiece();
   spawn();
   updateHUD();
