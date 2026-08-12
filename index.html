@@ -9,6 +9,26 @@
 <body>
   <div class="wrapper">
     <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Cambiar tema"></button>
+    <div id="skin-picker" class="skin-picker" role="group" aria-label="Seleccionar skin">
+      <button type="button" class="skin-btn" data-skin="retro" aria-label="Skin Retro" title="Retro">🟦</button>
+      <button type="button" class="skin-btn" data-skin="neon" aria-label="Skin Neon" title="Neon">💠</button>
+      <button type="button" class="skin-btn" data-skin="pastel" aria-label="Skin Pastel" title="Pastel">🌸</button>
+      <button type="button" class="skin-btn" data-skin="pixel" aria-label="Skin Pixel art" title="Pixel art">🕹️</button>
+    </div>
+
+    <div id="start-screen" class="start-screen">
+      <div class="start-box">
+        <h1 class="start-title">TETRIS</h1>
+        <div class="panel-section start-highscores">
+          <span class="label">RECORDS</span>
+          <table class="highscores-table">
+            <tbody id="start-highscores-body"></tbody>
+          </table>
+        </div>
+        <button id="play-btn">Jugar</button>
+      </div>
+    </div>
+
     <div class="game-container">
       <canvas id="board" width="300" height="600"></canvas>
 
@@ -24,6 +44,19 @@
         <div class="panel-section">
           <span class="label">LEVEL</span>
           <span class="value" id="level">1</span>
+        </div>
+
+        <div class="panel-section">
+          <span class="label">COMBO</span>
+          <span class="value combo-value" id="combo">—</span>
+        </div>
+
+        <div class="panel-section">
+          <span class="label">MEJOR RACHA</span>
+          <div class="best-stats">
+            <span id="best-combo">Combo: 0</span>
+            <span id="best-lines">Líneas: 0</span>
+          </div>
         </div>
 
         <div class="panel-section">
@@ -55,7 +88,63 @@
       <div class="overlay-box">
         <p id="overlay-title">GAME OVER</p>
         <p id="overlay-score"></p>
+
+        <div id="highscore-entry" class="highscore-entry hidden">
+          <p class="highscore-entry-label">¡Nueva puntuación en el top 5!</p>
+          <div class="highscore-entry-row">
+            <input id="highscore-name-input" type="text" maxlength="12" placeholder="Jugador" autocomplete="off" />
+            <button id="highscore-save-btn" type="button">Guardar</button>
+          </div>
+        </div>
+
+        <div id="highscores-section" class="highscores-section hidden">
+          <span class="label">RECORDS</span>
+          <table class="highscores-table">
+            <tbody id="highscores-body"></tbody>
+          </table>
+          <div class="highscore-stats" id="highscore-stats"></div>
+          <button id="clear-highscores-btn" class="secondary-btn" type="button">Borrar records</button>
+        </div>
+
         <button id="restart-btn">Reiniciar</button>
+      </div>
+    </div>
+
+    <div id="pause-menu" class="overlay hidden">
+      <div class="overlay-box pause-box">
+        <p id="pause-title">PAUSA</p>
+
+        <div id="pause-main-view" class="pause-view">
+          <button id="resume-btn" class="menu-btn">Reanudar</button>
+          <button id="restart-pause-btn" class="menu-btn">Reiniciar</button>
+          <button id="controls-toggle-btn" class="menu-btn">Ver controles</button>
+
+          <div class="pause-level-select">
+            <label for="start-level-select">Nivel inicial</label>
+            <select id="start-level-select">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+              <option value="7">7</option>
+              <option value="8">8</option>
+              <option value="9">9</option>
+              <option value="10">10</option>
+              <option value="11">11</option>
+              <option value="12">12</option>
+              <option value="13">13</option>
+              <option value="14">14</option>
+              <option value="15">15</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="pause-controls-view" class="pause-view hidden">
+          <ul id="pause-controls-list"></ul>
+          <button id="pause-back-btn" class="menu-btn">Volver</button>
+        </div>
       </div>
     </div>
   </div>
