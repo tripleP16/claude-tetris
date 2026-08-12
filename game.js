@@ -703,6 +703,20 @@ function endGame() {
   cancelAnimationFrame(animId);
   overlayTitle.textContent = 'GAME OVER';
   overlayScore.textContent = `Puntuación: ${score.toLocaleString()}`;
+
+  resetClearHighscoresBtn();
+  highscoresSectionEl.classList.remove('hidden');
+  renderHighscoreStats(highscoreStatsEl);
+  renderHighscores(highscoresBodyEl, null);
+
+  if (qualifiesForHighscore(score)) {
+    highscoreNameInput.value = '';
+    highscoreEntryEl.classList.remove('hidden');
+    setTimeout(() => highscoreNameInput.focus(), 0);
+  } else {
+    highscoreEntryEl.classList.add('hidden');
+  }
+
   overlay.classList.remove('hidden');
 
   const stats = loadStats();

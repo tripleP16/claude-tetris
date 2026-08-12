@@ -426,8 +426,8 @@ kbd {
   border-radius: 4px;
 }
 
-.overlay.hidden {
-  display: none;
+.hidden {
+  display: none !important;
 }
 
 .overlay-box {
