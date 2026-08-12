@@ -15,6 +15,20 @@
       <button type="button" class="skin-btn" data-skin="pastel" aria-label="Skin Pastel" title="Pastel">🌸</button>
       <button type="button" class="skin-btn" data-skin="pixel" aria-label="Skin Pixel art" title="Pixel art">🕹️</button>
     </div>
+
+    <div id="start-screen" class="start-screen">
+      <div class="start-box">
+        <h1 class="start-title">TETRIS</h1>
+        <div class="panel-section start-highscores">
+          <span class="label">RECORDS</span>
+          <table class="highscores-table">
+            <tbody id="start-highscores-body"></tbody>
+          </table>
+        </div>
+        <button id="play-btn">Jugar</button>
+      </div>
+    </div>
+
     <div class="game-container">
       <canvas id="board" width="300" height="600"></canvas>
 
@@ -74,6 +88,24 @@
       <div class="overlay-box">
         <p id="overlay-title">GAME OVER</p>
         <p id="overlay-score"></p>
+
+        <div id="highscore-entry" class="highscore-entry hidden">
+          <p class="highscore-entry-label">¡Nueva puntuación en el top 5!</p>
+          <div class="highscore-entry-row">
+            <input id="highscore-name-input" type="text" maxlength="12" placeholder="Jugador" autocomplete="off" />
+            <button id="highscore-save-btn" type="button">Guardar</button>
+          </div>
+        </div>
+
+        <div id="highscores-section" class="highscores-section hidden">
+          <span class="label">RECORDS</span>
+          <table class="highscores-table">
+            <tbody id="highscores-body"></tbody>
+          </table>
+          <div class="highscore-stats" id="highscore-stats"></div>
+          <button id="clear-highscores-btn" class="secondary-btn" type="button">Borrar records</button>
+        </div>
+
         <button id="restart-btn">Reiniciar</button>
       </div>
     </div>

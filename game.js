@@ -133,8 +133,21 @@ const controlsToggleBtn = document.getElementById('controls-toggle-btn');
 const pauseBackBtn = document.getElementById('pause-back-btn');
 const startLevelSelect = document.getElementById('start-level-select');
 
+const startScreen = document.getElementById('start-screen');
+const startHighscoresBodyEl = document.getElementById('start-highscores-body');
+const playBtn = document.getElementById('play-btn');
+const highscoreEntryEl = document.getElementById('highscore-entry');
+const highscoreNameInput = document.getElementById('highscore-name-input');
+const highscoreSaveBtn = document.getElementById('highscore-save-btn');
+const highscoresSectionEl = document.getElementById('highscores-section');
+const highscoresBodyEl = document.getElementById('highscores-body');
+const highscoreStatsEl = document.getElementById('highscore-stats');
+const clearHighscoresBtn = document.getElementById('clear-highscores-btn');
+
 const THEME_KEY = 'tetris-theme';
 const START_LEVEL_KEY = 'tetris-start-level';
+const HIGHSCORES_KEY = 'tetris-highscores';
+const MAX_HIGHSCORES = 5;
 let gridLineColor = '#22222e';
 let menuOpen = false;
 
@@ -210,6 +223,116 @@ applySkin(getPreferredSkin());
 skinButtons.forEach(btn => {
   btn.addEventListener('click', () => setSkin(btn.dataset.skin));
 });
+
+let clearHighscoresConfirmPending = false;
+let clearHighscoresConfirmTimer = null;
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, ch => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[ch]));
+}
+
+function loadHighscores() {
+  try {
+    const raw = localStorage.getItem(HIGHSCORES_KEY);
+    const arr = JSON.parse(raw);
+    if (!Array.isArray(arr)) return [];
+    return arr
+      .filter(e => e && typeof e.score === 'number' && typeof e.name === 'string')
+      .slice(0, MAX_HIGHSCORES);
+  } catch (err) {
+    return [];
+  }
+}
+
+function saveHighscoresList(list) {
+  localStorage.setItem(HIGHSCORES_KEY, JSON.stringify(list));
+}
+
+function qualifiesForHighscore(candidateScore) {
+  const list = loadHighscores();
+  if (list.length < MAX_HIGHSCORES) return true;
+  return candidateScore > list[list.length - 1].score;
+}
+
+function renderHighscores(containerEl, highlightEntry) {
+  if (!containerEl) return;
+  const list = loadHighscores();
+  if (!list.length) {
+    containerEl.innerHTML = '<tr><td colspan="3">Sin records aún</td></tr>';
+    return;
+  }
+  containerEl.innerHTML = list.map((entry, i) => {
+    const isNew = !!highlightEntry &&
+      entry.name === highlightEntry.name &&
+      entry.score === highlightEntry.score &&
+      entry.lines === highlightEntry.lines &&
+      entry.level === highlightEntry.level;
+    return `<tr class="${isNew ? 'highscore-new' : ''}">
+      <td>${i + 1}</td>
+      <td>${escapeHtml(entry.name)}</td>
+      <td>${entry.score.toLocaleString()}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderHighscoreStats(containerEl) {
+  if (!containerEl) return;
+  const combo = bestStats.bestCombo > 0 ? bestStats.bestCombo : '—';
+  const bestLines = bestStats.bestLines > 0 ? bestStats.bestLines : '—';
+  containerEl.textContent = `Mejor combo: ${combo}  ·  Máx. líneas: ${bestLines}`;
+}
+
+function saveHighscore() {
+  const raw = highscoreNameInput.value.trim();
+  const name = (raw || 'Jugador').slice(0, 12);
+  const entry = { name, score, lines, level };
+  const list = loadHighscores();
+  list.push(entry);
+  list.sort((a, b) => b.score - a.score);
+  saveHighscoresList(list.slice(0, MAX_HIGHSCORES));
+  highscoreEntryEl.classList.add('hidden');
+  renderHighscores(highscoresBodyEl, entry);
+}
+
+highscoreSaveBtn.addEventListener('click', saveHighscore);
+highscoreNameInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    saveHighscore();
+  }
+});
+
+function resetClearHighscoresBtn() {
+  clearHighscoresConfirmPending = false;
+  clearHighscoresBtn.textContent = 'Borrar records';
+  if (clearHighscoresConfirmTimer) {
+    clearTimeout(clearHighscoresConfirmTimer);
+    clearHighscoresConfirmTimer = null;
+  }
+}
+
+clearHighscoresBtn.addEventListener('click', () => {
+  if (!clearHighscoresConfirmPending) {
+    clearHighscoresConfirmPending = true;
+    clearHighscoresBtn.textContent = '¿Seguro?';
+    clearHighscoresConfirmTimer = setTimeout(resetClearHighscoresBtn, 3000);
+    return;
+  }
+  resetClearHighscoresBtn();
+  localStorage.removeItem(HIGHSCORES_KEY);
+  renderHighscores(highscoresBodyEl, null);
+});
+
+function showStartScreen() {
+  renderHighscores(startHighscoresBodyEl);
+  startScreen.classList.remove('hidden');
+}
+
+function hideStartScreen() {
+  startScreen.classList.add('hidden');
+}
 
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
 let powerupQueue, linesSincePowerup, powerupThreshold, freezeUntil;
@@ -588,6 +711,19 @@ function endGame() {
   localStorage.setItem(STATS_KEY, JSON.stringify(stats));
   bestStats = stats;
   updateHUD();
+
+  resetClearHighscoresBtn();
+  highscoresSectionEl.classList.remove('hidden');
+  renderHighscoreStats(highscoreStatsEl);
+  renderHighscores(highscoresBodyEl, null);
+
+  if (qualifiesForHighscore(score)) {
+    highscoreNameInput.value = '';
+    highscoreEntryEl.classList.remove('hidden');
+    setTimeout(() => highscoreNameInput.focus(), 0);
+  } else {
+    highscoreEntryEl.classList.add('hidden');
+  }
 }
 
 function showPauseMenu() {
@@ -609,6 +745,7 @@ function hidePauseMenu() {
 }
 
 function togglePause() {
+  if (!startScreen.classList.contains('hidden')) return;
   if (gameOver) return;
   if (menuOpen) {
     hidePauseMenu();
@@ -661,6 +798,9 @@ function init() {
   updateHUD();
   overlay.classList.add('hidden');
   pauseMenu.classList.add('hidden');
+  highscoresSectionEl.classList.add('hidden');
+  highscoreEntryEl.classList.add('hidden');
+  resetClearHighscoresBtn();
   cancelAnimationFrame(animId);
   animId = requestAnimationFrame(loop);
 }
@@ -688,6 +828,8 @@ startLevelSelect.addEventListener('change', () => {
 });
 
 document.addEventListener('keydown', e => {
+  if (e.target && e.target.tagName === 'INPUT') return;
+  if (!startScreen.classList.contains('hidden')) return;
   if (e.code === 'KeyP' || e.code === 'Escape') { togglePause(); return; }
   if (menuOpen) return;
   if (paused || gameOver) return;
@@ -718,4 +860,9 @@ document.addEventListener('keydown', e => {
 
 restartBtn.addEventListener('click', init);
 
-init();
+playBtn.addEventListener('click', () => {
+  hideStartScreen();
+  init();
+});
+
+showStartScreen();
